@@ -1,53 +1,16 @@
+local core = require "cryspycore"
+local ui = require "cryspyui"
+
 local protocol = "LYMJ"
-local name = "Naemha"
-local host = "MAIN"
+local hostname = "Naemha"
+local remotehost = "MAIN"
+
 local width, height = term.getSize()
 local isRunning = true
 
-term.setBackgroundColor(colors.pink)
-term.setCursorPos(21, 10)
-term.clear()
-term.blit("LOADING...", "FFFFFFFFFF", "0000000000")
-
-peripheral.find("modem", rednet.open)
-
-if rednet.isOpen() == false then
-  error("No modem connected")
-end
-
-rednet.host(protocol, name)
-hostID = rednet.lookup(protocol, host)
-
-if hostID == nil then
-  error("Server "..host.." could not be reached")
-end
-
-function renderDebug(debugMessage)
-  term.setCursorPos(1, height)
-  local spacedmessage = debugMessage..string.rep(" ", 10 - #debugMessage)
-
-  term.blit(spacedmessage, string.rep("0", #spacedmessage), string.rep("7", #spacedmessage))
-end
-
-function drawUI(text, bg, fg, x, y)
-
-  if #text > #bg then
-    local patternsize = #bg
-    for i = patternsize, #text - 1 do
-      bg = bg .. string.sub(bg, (i % patternsize) + 1, (i % patternsize) + 1)
-    end
-  end
-
-  if #text > #fg then
-    local patternsize = #fg
-    for i = patternsize, #text - 1 do
-      fg = fg .. string.sub(fg, (i % patternsize) + 1, (i % patternsize) + 1)
-    end
-  end
-
-  term.setCursorPos(x, y)
-  term.blit(text, bg, fg)
-end
+ui.init()
+core.init(protocol, hostname)
+core.verifyRemoteHost(remotehost)
 
 function fetch()
   rednet.send(hostID, "FETCH", protocol)
