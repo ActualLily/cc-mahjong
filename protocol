@@ -1,0 +1,41 @@
+PROTOCOL SPECIFICATION FOR LYMJ
+-------------------------------
+CLIENT
+-------------------------------
+STATUS/[MATCHID]/[NAME]
+    Fetches the current state of the match MATCHID from the point of view of WIND.
+    If NAME provided is SPECTATE, it is considered master view and will show every player's hand from East's perspective.
+    As the NAME is limited to 7 characters, SPECTATE can only be sent by the application itself.
+
+PROGRESS/[MATCHID]/[WIND]/[MOVE]:[TILE]
+    Progresses the match.
+    MOVE is one of the following:
+        DISCARD:TILE RIICHI:TILE TSUMO RON CHI PON KAN RYUUKYOKU
+
+FETCH
+    Responds with the available MATCHIDs.
+-------------------------------
+SERVER
+-------------------------------
+STATE/
+[ROUNDWIND][ROUND#]:[HONBA]:[RIICHICOUNT]/
+[DORA]:[URA]/
+[WALL]:[DEAD]/
+[ENAME]:[SNAME]:[WNAME]:[NNAME]/
+[EPTS]:[SPTS]:[WPTS]:[NPTS]/
+[EHAND]:[SHAND]:[WHAND]:[NHAND]/
+[EDISCARDS]:[SDISCARDS]:[WDISCARDS]:[NDISCARDS]/
+[EOPEN]:[SOPEN]:[WOPEN]:[NOPEN]/
+[ERIICHI]:[SRIICHI]:[WRIICHI]:[NRIICHI]
+
+STATE/
+E2:0:0/
+8m3p4z2z5s:9m6s0m1m7z/
+1s1m1z5z6s2z2p5s9s9p6z2z1s1m1z5z6s2z2p5s9s9p6z2z:7s2z4p2s/
+Naemha:Madoka:Homura:Sayaka/
+2m4m6m6p1s2s5s7s8s1z2z4z5z7z:2m3m3m0m6m9m5s6s1z1z2z3z4z7z:4m7m7m9m9m4s5s6sps1s9s2z4z5z7z:2m7m9m4p9p9p3s4s7s2z2z3z4z4z/
+1s1m1z5z6s2z2p5s9s9p6z2z:8m1z1p7z1m8p2s1p2m2z2p4s:7z9s7p9m3z6z2m7p1p7s9p3z:5p5m7s2z4p2s3m6z8s6p2m3z/
+:::/
+0:0:0:0
+
+    Hidden tiles are omitted with ??.
