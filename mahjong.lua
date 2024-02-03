@@ -17,82 +17,162 @@ function ensureConnection()
   if isConnected == false then
     core.init(protocol, hostname)
     core.verifyRemoteHost(remotehost)
-    isConnected = true
+    isConnected = core.verifyRemoteHost(remotehost)
+    return isConnected
   end
 end
+
+local availableMatches = ""
 
 function fetch()
   rednet.send(hostID, "FETCH", protocol)
   id, msg = rednet.receive(protocol, 5)
 
-  return msg
+  availableMatches = msg
 end
+
 local currentName = core.grabConfig()["NAME"]
 local currentInterface = "MAINMENU"
-local mainMenu_position = 1
 
 -- MAIN MENU FUNCTIONS
 
-function renderMainMenu()
-  ui.renderMonochromeBackground(colors.pink)
+local mainMenuPosition = 1
 
+function renderMainMenu()
+  local funnyBackgroundColor = "6"
+  local funnyForegroundColor = "e"
+  
   local titleASCII = {}
-  titleASCII[1]  = "         -###-                                      "
-  titleASCII[2]  = "          ###                                       "
-  titleASCII[3]  = "          ###                                       "
-  titleASCII[4]  = "          ###                                       "
-  titleASCII[5]  = ":.    .::=######*#**####:                           "
-  titleASCII[6]  = "=###*=:   ###       ####:                           "
-  titleASCII[7]  = " *#=      ###      -###                             "
-  titleASCII[8]  = " -#*      ###      *##                              "
-  titleASCII[9]  = " .#*      ### .::==##:                              "
-  titleASCII[10] = "  #############******=                              "
-  titleASCII[11] = "  .*      ###                                       "
-  titleASCII[12] = "          ###      _____  _  _       _    _         "
-  titleASCII[13] = "          ##*     | __  ||_||_| ___ | |_ |_|        "
-  titleASCII[14] = "          ##*     |    -|| || ||  _||   || |        "
-  titleASCII[15] = "          ##*     |__|__||_||_||___||_|_||_|        "
-  titleASCII[16] = "          ##-                                       "
-  titleASCII[17] = "          ##                                        "
+
+  if currentName == "CUTIE" or currentName == "FLOWER" or currentName == "DOROTHY" then
+    term.setPaletteColour(colors.lime, 0xC2FFC9)
+    funnyBackgroundColor = "5"
+    funnyForegroundColor = "d"
+    ui.renderMonochromeBackground(colors.lime)
+    titleASCII[1]  = "           ,                           "
+    titleASCII[2]  = "       /\\^/`\\                          "
+    titleASCII[3]  = "      | \\/   |                         "
+    titleASCII[4]  = "      | |    |                         "
+    titleASCII[5]  = "      \\ \\    /                         "
+    titleASCII[6]  = "       '\\\\//'                          "
+    titleASCII[7]  = "         ||                            "
+    titleASCII[8]  = "         ||                            "
+    titleASCII[9]  = "         ||                            "
+    titleASCII[10] = "         ||                            "
+    titleASCII[11] = "         ||  ,                         "
+    titleASCII[12] = "     |\\  ||  |\\      _____     _   _     __"
+    titleASCII[13] = "     | | ||  | |    |     |_ _| |_|_|___|  |"
+    titleASCII[14] = "     | | || / /     |   --| | |  _| | -_|__|"
+    titleASCII[15] = "      \\ \\||/ /      |_____|___|_| |_|___|__|"
+    titleASCII[16] = "       `\\\\//`                          "
+    titleASCII[17] = "      ^^^^^^^^                         "
+  else
+    ui.renderMonochromeBackground(colors.pink)
+    titleASCII[1]  = "         -###-                                      "
+    titleASCII[2]  = "          ###                                       "
+    titleASCII[3]  = "          ###                                       "
+    titleASCII[4]  = "          ###                                       "
+    titleASCII[5]  = ":.    .::=######*#**####:                           "
+    titleASCII[6]  = "=###*=:   ###       ####:                           "
+    titleASCII[7]  = " *#=      ###      -###                             "
+    titleASCII[8]  = " -#*      ###      *##                              "
+    titleASCII[9]  = " .#*      ### .::==##:                              "
+    titleASCII[10] = "  #############******=                              "
+    titleASCII[11] = "  .*      ###                                       "
+    titleASCII[12] = "          ###      _____  _  _       _    _         "
+    titleASCII[13] = "          ##*     | __  ||_||_| ___ | |_ |_|        "
+    titleASCII[14] = "          ##*     |    -|| || ||  _||   || |        "
+    titleASCII[15] = "          ##*     |__|__||_||_||___||_|_||_|        "
+    titleASCII[16] = "          ##-                                       "
+    titleASCII[17] = "          ##                                        "
+  end
+  
 
   for k, v in pairs(titleASCII) do
-    ui.drawUI(v, "e", "6", 2, 1 + k)
+    ui.drawUI(v, funnyForegroundColor, funnyBackgroundColor, 2, 1 + k)
   end
 
-  ui.drawUI("Welcome, "..currentName.."!", "e", "6", 31, 5)
 
-  local menu = {}
-  menu[1] = "  Find matches  "
-  menu[2] = "    Set name    "
-  menu[3] = "      Quit      "
 
-  for k, v in pairs(menu) do
-    if k == mainMenu_position then
+  ui.drawUI("Welcome, "..currentName.."!", funnyForegroundColor, funnyBackgroundColor, 31, 5)
+
+  local mainMenuOptions = {}
+  mainMenuOptions[1] = "  Find matches  "
+  mainMenuOptions[2] = "    Set name    "
+  mainMenuOptions[3] = "      Quit      "
+
+  for k, v in pairs(mainMenuOptions) do
+    if k == mainMenuPosition then
       v = "["..string.sub(v, 2, #v -1 ).."]"
     end
 
     ui.drawUI(v, "0", "2aaaaaaaaaaaaaa2", 31, 6 + k)
+
   end
 end
 
 function mainMenu(key)
-  if key == "up" and mainMenu_position > 1 then
-    mainMenu_position = mainMenu_position - 1
-  elseif key == "down" and mainMenu_position < 3 then
-    mainMenu_position = mainMenu_position + 1
+  if key == "up" and mainMenuPosition > 1 then
+    mainMenuPosition = mainMenuPosition - 1
+  elseif key == "down" and mainMenuPosition < 3 then
+    mainMenuPosition = mainMenuPosition + 1
   elseif key == "enter" or key == "space" then
-    if mainMenu_position == 1 then
-      -- do findmatches
-    elseif mainMenu_position == 2 then
+    if mainMenuPosition == 1 then
+      ensureConnection()
+
+    elseif mainMenuPosition == 2 then
       currentInterface = "NAMESELECT"
       renderNameSelect()
       return
-    elseif mainMenu_position == 3 then
+    elseif mainMenuPosition == 3 then
       isRunning = false
     end
   end
 
   renderMainMenu()
+end
+
+-- MATCH MENU FUNCTIONS
+
+local matchMenuPosition = 1
+
+function loadMatchMenu()
+  local cofetch = coroutine.create(fetch)
+  cofetch.resume()
+
+  while cofetch.status() == "running" do
+    wait(100)
+  end
+
+  renderMatchMenu()
+end
+
+function renderMatchMenu()
+  ui.renderMonochromeBackground(colors.pink)
+  matchMenuOptions = {}
+  matchMenuOptions[1] = "  NEW  "
+  matchMenuOptions[2] = "  REFRESH  "
+  matchMenuOptions[3] = "  BACK  "
+  matchMenuOptions[4] = " LOADING..."
+  ui.drawUI()
+end
+
+function matchMenu(key)
+  -- 1 2 3
+  -- 44444
+  -- 55555
+
+  if key == "left" and matchMenuPosition > 1 and matchMenuPosition < 4 then
+    matchMenuPosition = matchMenuPosition - 1
+  elseif key == "right" and matchMenuPosition < 3 then
+    matchMenuPosition = matchMenuPosition + 1
+  elseif key == "down" and matchMenuPosition < #matchMenuPosition then
+    matchMenuPosition = matchMenuPosition + 1
+  elseif key == "up" and matchMenuPosition > 3 then
+    matchMenuPosition = 1
+  end
+
+  renderMatchMenu()
 end
 
 -- NAME SELECT FUNCTIONS
@@ -112,7 +192,7 @@ function nameSelect(key)
     core.saveConfig("NAME", currentName)
     currentInterface = "MAINMENU"
     renderMainMenu()
-    return44
+    return
   end
 
   print(currentInterface, currentName)
