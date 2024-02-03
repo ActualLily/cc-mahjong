@@ -1,16 +1,18 @@
 local core = require "cryspycore"
 local ui = require "cryspyui"
 
-local protocol = "LYMJ"
-local hostname = "Naemha"
-local remotehost = "MAIN"
+local protocol = core.grabConfig()["PROTOCOL"]
+local hostname = core.grabConfig()["NAME"]
+local remotehost = core.grabConfig()["HOST"]
 
 local width, height = term.getSize()
 local isRunning = true
 
-ui.init()
+ui.init(colors.pink)
 core.init(protocol, hostname)
 core.verifyRemoteHost(remotehost)
+
+-- NETWORK FUNCTIONS
 
 function fetch()
   rednet.send(hostID, "FETCH", protocol)
@@ -21,24 +23,37 @@ end
 
 local currentInterface = "MAINMENU"
 local mainMenu_position = 1
+local currentName = core.grabConfig()["NAME"]
+
+-- MAIN MENU FUNCTIONS
 
 function renderMainMenu()
-  term.setBackgroundColor(colors.pink)
-  term.clear()
+  ui.renderMonochromeBackground(colors.pink)
 
   local titleASCII = {}
-  titleASCII[1] = "___  ___        _       _                      "
-  titleASCII[2] = "|  \\/  |       | |     (_)                     "
-  titleASCII[3] = "| .  . |  __ _ | |__    _   ___   _ __    __ _ "
-  titleASCII[4] = "| |\\/| | / _` || '_ \\  | | / _ \\ | '_ \\  / _` |"
-  titleASCII[5] = "| |  | || (_| || | | | | || (_) || | | || (_| |"
-  titleASCII[6] = "\\_|  |_/ \\__,_||_| |_| | | \\___/ |_| |_| \\__, |"
-  titleASCII[7] = "                       / |                __/ |"
-  titleASCII[8] = "                     |__/                |___/ "
+  titleASCII[1]  = "         -###-                                      "
+  titleASCII[2]  = "          ###                                       "
+  titleASCII[3]  = "          ###                                       "
+  titleASCII[4]  = "          ###                                       "
+  titleASCII[5]  = ":.    .::=######*#**####:                           "
+  titleASCII[6]  = "=###*=:   ###       ####:                           "
+  titleASCII[7]  = " *#=      ###      -###                             "
+  titleASCII[8]  = " -#*      ###      *##                              "
+  titleASCII[9]  = " .#*      ### .::==##:                              "
+  titleASCII[10] = "  #############******=                              "
+  titleASCII[11] = "  .*      ###                                       "
+  titleASCII[12] = "          ###      _____  _  _       _    _         "
+  titleASCII[13] = "          ##*     | __  ||_||_| ___ | |_ |_|        "
+  titleASCII[14] = "          ##*     |    -|| || ||  _||   || |        "
+  titleASCII[15] = "          ##*     |__|__||_||_||___||_|_||_|        "
+  titleASCII[16] = "          ##-                                       "
+  titleASCII[17] = "          ##                                        "
 
   for k, v in pairs(titleASCII) do
-    drawUI(v, "0", "f77f", 3, 2 + k)
+    ui.drawUI(v, "e", "6", 2, 1 + k)
   end
+
+  ui.drawUI("Welcome, "..currentName.."!", "e", "6", 31, 5)
 
   local menu = {}
   menu[1] = "  Find matches  "
@@ -50,7 +65,7 @@ function renderMainMenu()
       v = "["..string.sub(v, 2, #v -1 ).."]"
     end
 
-    drawUI(v, "f", "2", 19, 13 + k)
+    ui.drawUI(v, "0", "2aaaaaaaaaaaaaa2", 31, 6 + k)
   end
 end
 
@@ -60,7 +75,13 @@ function mainMenu(key)
   elseif key == "down" and mainMenu_position < 3 then
     mainMenu_position = mainMenu_position + 1
   elseif key == "enter" or key == "space" then
-    if mainMenu_position == 3 then
+    if mainMenu_position == 1 then
+      -- do findmatches
+    elseif mainMenu_position == 2 then
+      currentInterface = "NAMESELECT"
+      renderNameSelect()
+      return
+    elseif mainMenu_position == 3 then
       isRunning = false
     end
   end
@@ -68,13 +89,45 @@ function mainMenu(key)
   renderMainMenu()
 end
 
+-- NAME SELECT FUNCTIONS
+
+function renderNameSelect()
+  ui.renderMonochromeBackground(colors.gray)
+  ui.drawUI("Please enter your name", "0", "7", 16, 9)
+  ui.drawUI(currentName..string.rep(" ", 7 - #currentName), "0", "8", 23, 10)
+end
+
+function nameSelect(key)
+  if string.match(key, "%w") and #key == 1 and #currentName < 7 then
+    currentName = currentName..string.upper(key)
+  elseif string.match(key, "backspace") then
+    currentName = string.sub(currentName, 1, #currentName - 1)
+  elseif string.match(key, "enter") then
+    core.saveConfig("NAME", "CURRENTNAME")
+    currentInterface = "MAINMENU"
+    renderMainMenu()
+    return
+  end
+
+  print(currentInterface, currentName)
+  renderNameSelect()
+
+end
+
+-- APPLICATION FUNCTIONS
+
 function processKey(key)
   if currentInterface == "MAINMENU" then
     mainMenu(key)
+  elseif currentInterface == "NAMESELECT" then
+    nameSelect(key)
   end
 end
 
 function run()
+
+  renderMainMenu()
+
   while isRunning do
     local event, key, is_held = os.pullEvent("key")
     coprocKey = coroutine.create(processKey)

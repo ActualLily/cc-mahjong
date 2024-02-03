@@ -2,6 +2,7 @@ termx, termy = term.getSize()
 
 function init(color)
   term.setBackgroundColor(colors.pink)
+  term.setTextColor(colors.black)
   term.setCursorPos(21, 10)
   term.clear()
   term.blit("LOADING...", "FFFFFFFFFF", "0000000000")
@@ -12,6 +13,12 @@ function renderDebug(debugMessage)
     local spacedmessage = debugMessage..string.rep(" ", 10 - #debugMessage)
   
     term.blit(extendPattern(spacedmessage, "f", "7"))
+end
+
+function renderMonochromeBackground(color)
+  print("RUNNING")
+  term.setBackgroundColor(color)
+  term.clear()
 end
 
 function extendPattern(text, pattern)
@@ -26,9 +33,6 @@ function extendPattern(text, pattern)
 end
 
 function drawUI(text, bg, fg, x, y)
-  x = x or termx
-  y = y or termy
- 
   bg = extendPattern(text, bg)
   fg = extendPattern(text, fg)
 
@@ -37,4 +41,4 @@ function drawUI(text, bg, fg, x, y)
 end
 
 
-return { init = init, renderDebug = renderDebug }
+return { init = init, renderDebug = renderDebug, renderMonochromeBackground = renderMonochromeBackground, drawUI = drawUI }
