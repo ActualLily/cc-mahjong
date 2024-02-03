@@ -7,12 +7,19 @@ local remotehost = core.grabConfig()["HOST"]
 
 local width, height = term.getSize()
 local isRunning = true
+local isConnected = false
 
 ui.init(colors.pink)
-core.init(protocol, hostname)
-core.verifyRemoteHost(remotehost)
 
 -- NETWORK FUNCTIONS
+
+function ensureConnection()
+  if isConnected == false then
+    core.init(protocol, hostname)
+    core.verifyRemoteHost(remotehost)
+    isConnected = true
+  end
+end
 
 function fetch()
   rednet.send(hostID, "FETCH", protocol)
@@ -20,10 +27,9 @@ function fetch()
 
   return msg
 end
-
+local currentName = core.grabConfig()["NAME"]
 local currentInterface = "MAINMENU"
 local mainMenu_position = 1
-local currentName = core.grabConfig()["NAME"]
 
 -- MAIN MENU FUNCTIONS
 
@@ -102,11 +108,11 @@ function nameSelect(key)
     currentName = currentName..string.upper(key)
   elseif string.match(key, "backspace") then
     currentName = string.sub(currentName, 1, #currentName - 1)
-  elseif string.match(key, "enter") then
-    core.saveConfig("NAME", "CURRENTNAME")
+  elseif string.match(key, "enter") and #currentName > 0 then
+    core.saveConfig("NAME", currentName)
     currentInterface = "MAINMENU"
     renderMainMenu()
-    return
+    return44
   end
 
   print(currentInterface, currentName)
@@ -126,8 +132,13 @@ end
 
 function run()
 
-  renderMainMenu()
-
+  if currentName == "" then
+    currentInterface = "NAMESELECT"
+    renderNameSelect()
+  else 
+    renderMainMenu()
+  end
+  
   while isRunning do
     local event, key, is_held = os.pullEvent("key")
     coprocKey = coroutine.create(processKey)

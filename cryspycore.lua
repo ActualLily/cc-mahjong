@@ -80,12 +80,15 @@ function grabConfig()
 
   for k,v in pairs(indexedArray) do
     local keypair = splitBySeparator(v:gsub("%s+", ""), "=")
+
+    if keypair[2] == nil then
+      keypair[2] = ""
+    end
+    
     configArray[keypair[1]] = keypair[2]
   end
 
   return configArray
 end
-
-saveConfig("NAME", "AWAWA")
 
 return { init = init, verifyRemoteHost = verifyRemoteHost, grabConfig = grabConfig, saveConfig = saveConfig }
