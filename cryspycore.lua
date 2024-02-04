@@ -1,10 +1,4 @@
-local protocol = ""
-local hostname = ""
-
 function init(protocolToInit, hostnameToInit)
-  protocol = protocolToInit
-  hostname = hostnameToInit
-
   peripheral.find("modem", rednet.open)
 
   if rednet.isOpen() == false then
@@ -14,9 +8,10 @@ function init(protocolToInit, hostnameToInit)
     return false
   end
 
-  rednet.host(protocol, hostname)
+  rednet.host(protocolToInit, hostnameToInit)
   return true
 end
+
 
 function splitBySeparator(inputstr, sep)
   if sep == nil then
@@ -31,6 +26,7 @@ function splitBySeparator(inputstr, sep)
   return array
 end
 
+
 function findAfterLastSlash(str)
   local lastSlash = 0
 
@@ -44,16 +40,16 @@ function findAfterLastSlash(str)
 end
 
 function verifyRemoteHost(remote)
-  hostID = rednet.lookup(protocol, host)
+  hostID = rednet.lookup("LYMJ", remote)
 
   if hostID == nil then
     term.clear()
     term.setCursorPos(1, 1)
-    error("Server "..host.." could not be reached")
+    error("Server "..remote.." could not be reached")
     return false
   end
-
-  return true
+  print(hostID)
+  return hostID
 end
 
 function saveConfig(key, value)
@@ -84,11 +80,11 @@ function grabConfig()
     if keypair[2] == nil then
       keypair[2] = ""
     end
-    
+
     configArray[keypair[1]] = keypair[2]
   end
 
   return configArray
 end
 
-return { init = init, verifyRemoteHost = verifyRemoteHost, grabConfig = grabConfig, saveConfig = saveConfig }
+return { init = init, verifyRemoteHost = verifyRemoteHost, grabConfig = grabConfig, saveConfig = saveConfig, splitBySeparator = splitBySeparator }
