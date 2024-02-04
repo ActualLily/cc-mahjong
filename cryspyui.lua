@@ -9,7 +9,7 @@ function init(color)
 end
 
 function renderDebug(debugMessage)
-    term.setCursorPos(1, height)
+    term.setCursorPos(1, termy)
     local spacedmessage = debugMessage..string.rep(" ", 10 - #debugMessage)
   
     term.blit(extendPattern(spacedmessage, "f", "7"))
@@ -32,6 +32,10 @@ function extendPattern(text, pattern)
   return pattern
 end
 
+function surroundInBrackets(text)
+  return "["..string.sub(text, 2, #text -1 ).."]"
+end
+
 function drawUI(text, bg, fg, x, y)
   bg = extendPattern(text, bg)
   fg = extendPattern(text, fg)
@@ -41,4 +45,4 @@ function drawUI(text, bg, fg, x, y)
 end
 
 
-return { init = init, renderDebug = renderDebug, renderMonochromeBackground = renderMonochromeBackground, drawUI = drawUI }
+return { init = init, renderDebug = renderDebug, renderMonochromeBackground = renderMonochromeBackground, drawUI = drawUI, surroundInBrackets = surroundInBrackets }
