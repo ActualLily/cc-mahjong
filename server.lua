@@ -29,10 +29,13 @@ function getMatches()
   return matches
 end
 
-function getMatchStatus(id)
-  local match = fs.open("/mahjong/match/"..id, "r")
+function getMatchStatus(id, matchid, name)
+  local match = fs.open("/mahjong/match/"..matchid, "r")
   line = match.readLine()
   match.close()
+
+  print("STATUS     "..name.." requested \""..matchid.."\"")
+  rednet.send(id, line, protocol)
   return line
 end
 
@@ -50,12 +53,16 @@ function host()
   while true do
     local id, msg = rednet.receive(protocol)
     local msglist = getSplitList(msg)
-    local protocolrequest = msglist[1]
+    local protocolRequest = msglist[1]
 
-    if protocolrequest == "FETCH" then
-      local fetch = coroutine.create(returnMatches)
-      coroutine.resume(fetch, id)
+    if protocolRequest == "FETCH" then
+      returnMatches(id)
+    elseif protocolRequest == "STATUS" then
+      local matchName = msglist[2]
+      local playerName = msglist[3]
+      local matchStatus = getMatchStatus(id, matchName, playerName)
     end
+
   end
 end
 

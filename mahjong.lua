@@ -13,6 +13,8 @@ local isConnected = false
 
 core.init(protocol, hostname)
 core.verifyRemoteHost(remotehost)
+local currentName = core.grabConfig()["NAME"]
+local currentInterface = "MAINMENU"
 
 -- NETWORK FUNCTIONS
 
@@ -23,8 +25,12 @@ function fetch()
   return msg
 end
 
-local currentName = core.grabConfig()["NAME"]
-local currentInterface = "MAINMENU"
+function status(matchid)
+  rednet.send(hostID, "STATUS/"..matchid.."/"..currentName, protocol)
+  id, msg = rednet.receive(protocol, 5)
+
+  return msg
+end
 
 -- MAIN MENU FUNCTIONS
 
@@ -164,7 +170,6 @@ function renderMatchMenu()
     else 
       ui.drawUI(v..string.rep(" ", 49 - #v), "0", "2", 2, k)
     end
-
   end
 
   ui.drawUI("Playing: "..currentName, "e", "6", currentHorizontalPosition, 2)
@@ -186,11 +191,28 @@ function matchMenu(key)
     elseif matchMenuPosition < #matchMenuOptions then
       matchMenuPosition = matchMenuPosition + 1
     end
-  elseif key == "up" and matchMenuPosition > 3 then
-    matchMenuPosition = matchMenuPosition - 1
+  elseif key == "up" then
+    if matchMenuPosition > 4 then
+      matchMenuPosition = matchMenuPosition - 1
+    else
+      matchMenuPosition = 1
+    end
+  elseif key == "enter" then
+    if matchMenuPosition == 1 then
+    elseif matchMenuPosition == 2 then
+      initMatchMenu()
+    elseif matchMenuPosition == 3 then
+      currentInterface = "MAINMENU"
+      renderMainMenu()
+      return
+    elseif matchMenuPosition > 3 then
+      currentMatch = status(matchMenuOptions[matchMenuPosition])
+    end
   end
 
   renderMatchMenu()
+  term.setCursorPos(1, 9)
+  print(currentMatch)
 end
 
 -- NAME SELECT FUNCTIONS
