@@ -1,6 +1,8 @@
 local core = require "cryspycore"
 local ui = require "cryspyui"
 
+ui.init(colors.pink)
+
 local protocol = core.grabConfig()["PROTOCOL"]
 local hostname = core.grabConfig()["NAME"]
 local remotehost = core.grabConfig()["HOST"]
@@ -9,26 +11,16 @@ local width, height = term.getSize()
 local isRunning = true
 local isConnected = false
 
-ui.init(colors.pink)
+core.init(protocol, hostname)
+core.verifyRemoteHost(remotehost)
 
 -- NETWORK FUNCTIONS
-
-function ensureConnection()
-  if isConnected == false then
-    core.init(protocol, hostname)
-    core.verifyRemoteHost(remotehost)
-    isConnected = core.verifyRemoteHost(remotehost)
-    return isConnected
-  end
-end
-
-local availableMatches = ""
 
 function fetch()
   rednet.send(hostID, "FETCH", protocol)
   id, msg = rednet.receive(protocol, 5)
 
-  availableMatches = msg
+  return msg
 end
 
 local currentName = core.grabConfig()["NAME"]
@@ -87,12 +79,9 @@ function renderMainMenu()
     titleASCII[17] = "          ##                                        "
   end
   
-
   for k, v in pairs(titleASCII) do
     ui.drawUI(v, funnyForegroundColor, funnyBackgroundColor, 2, 1 + k)
   end
-
-
 
   ui.drawUI("Welcome, "..currentName.."!", funnyForegroundColor, funnyBackgroundColor, 31, 5)
 
@@ -103,7 +92,7 @@ function renderMainMenu()
 
   for k, v in pairs(mainMenuOptions) do
     if k == mainMenuPosition then
-      v = "["..string.sub(v, 2, #v -1 ).."]"
+      v = ui.surroundInBrackets(v)
     end
 
     ui.drawUI(v, "0", "2aaaaaaaaaaaaaa2", 31, 6 + k)
@@ -118,8 +107,12 @@ function mainMenu(key)
     mainMenuPosition = mainMenuPosition + 1
   elseif key == "enter" or key == "space" then
     if mainMenuPosition == 1 then
-      ensureConnection()
-
+      core.verifyRemoteHost(remotehost)
+      print(remotehost)
+      initMatchMenu()
+      currentInterface = "MATCHMENU"
+      renderMatchMenu()
+      return
     elseif mainMenuPosition == 2 then
       currentInterface = "NAMESELECT"
       renderNameSelect()
@@ -136,12 +129,16 @@ end
 
 local matchMenuPosition = 1
 
-function loadMatchMenu()
-  local cofetch = coroutine.create(fetch)
-  cofetch.resume()
+function initMatchMenu()
+  local availableMatches = core.splitBySeparator(fetch(), ":")
+  matchMenuOptions = {}
 
-  while cofetch.status() == "running" do
-    wait(100)
+  matchMenuOptions[1] = "  NEW  "
+  matchMenuOptions[2] = "  REFRESH  "
+  matchMenuOptions[3] = "  BACK  "
+
+  for k,v in pairs(availableMatches) do
+    matchMenuOptions[3 + k] = v
   end
 
   renderMatchMenu()
@@ -149,12 +146,29 @@ end
 
 function renderMatchMenu()
   ui.renderMonochromeBackground(colors.pink)
-  matchMenuOptions = {}
-  matchMenuOptions[1] = "  NEW  "
-  matchMenuOptions[2] = "  REFRESH  "
-  matchMenuOptions[3] = "  BACK  "
-  matchMenuOptions[4] = " LOADING..."
-  ui.drawUI()
+
+  local currentHorizontalPosition = 2
+
+  for k, v in pairs(matchMenuOptions) do
+    if k > 3 then
+      v = "  "..v.."  "
+    end
+
+    if k == matchMenuPosition then
+      v = ui.surroundInBrackets(v)
+    end
+
+    if k < 4 then
+      ui.drawUI(v, "0", "2", currentHorizontalPosition, 2)
+      currentHorizontalPosition = currentHorizontalPosition + #v + 2
+    else 
+      ui.drawUI(v..string.rep(" ", 49 - #v), "0", "2", 2, k)
+    end
+
+  end
+
+  ui.drawUI("Playing: "..currentName, "e", "6", currentHorizontalPosition, 2)
+
 end
 
 function matchMenu(key)
@@ -166,10 +180,14 @@ function matchMenu(key)
     matchMenuPosition = matchMenuPosition - 1
   elseif key == "right" and matchMenuPosition < 3 then
     matchMenuPosition = matchMenuPosition + 1
-  elseif key == "down" and matchMenuPosition < #matchMenuPosition then
-    matchMenuPosition = matchMenuPosition + 1
+  elseif key == "down" then
+    if matchMenuPosition < 4 then
+      matchMenuPosition = 4
+    elseif matchMenuPosition < #matchMenuOptions then
+      matchMenuPosition = matchMenuPosition + 1
+    end
   elseif key == "up" and matchMenuPosition > 3 then
-    matchMenuPosition = 1
+    matchMenuPosition = matchMenuPosition - 1
   end
 
   renderMatchMenu()
@@ -195,7 +213,6 @@ function nameSelect(key)
     return
   end
 
-  print(currentInterface, currentName)
   renderNameSelect()
 
 end
@@ -207,6 +224,8 @@ function processKey(key)
     mainMenu(key)
   elseif currentInterface == "NAMESELECT" then
     nameSelect(key)
+  elseif currentInterface == "MATCHMENU" then
+    matchMenu(key)
   end
 end
 
@@ -221,8 +240,7 @@ function run()
   
   while isRunning do
     local event, key, is_held = os.pullEvent("key")
-    coprocKey = coroutine.create(processKey)
-    coroutine.resume(coprocKey, keys.getName(key))
+    processKey(keys.getName(key))
   end
 
   rednet.unhost(protocol)
