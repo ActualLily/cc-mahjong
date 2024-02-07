@@ -80,7 +80,7 @@ function convertTileToDrawParams(tile, x, y)
   -- BACKGROUND
   -- HIDDEN TILE
   if tileNumber == "x" then
-    if (x + y) % 2 = 0 then
+    if (x + y) % 2 == 0 then
       tileBackground = "5"
     else
       tileBackground = "d"
@@ -88,10 +88,10 @@ function convertTileToDrawParams(tile, x, y)
   -- VISIBLE TILE
   else
     -- DORA (UPPERCASE)
-    if string.gmatch(tileSuit, "%u")
+    if string.gmatch(tileSuit, "%u") == true then
       tileBackground = "2"
     else
-      if (x + y) % 2 = 0 then
+      if (x + y) % 2 == 0 then
         tileBackground = "0"
       else
         tileBackground = "8"
