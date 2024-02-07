@@ -114,7 +114,6 @@ function mainMenu(key)
   elseif key == "enter" or key == "space" then
     if mainMenuPosition == 1 then
       core.verifyRemoteHost(remotehost)
-      print(remotehost)
       initMatchMenu()
       currentInterface = "MATCHMENU"
       renderMatchMenu()
@@ -129,6 +128,47 @@ function mainMenu(key)
   end
 
   renderMainMenu()
+end
+
+-- GAME FUNCTIONS
+
+function separateMatchProtocol()
+  -- Please refer to /docs/protocol
+  local matchArray = core.splitBySeparator(currentMatch, "/")
+
+  mRoundInformation = core.splitBySeparator(matchArray[1], ":")
+  -- [1] Round Wind | [2] Round # | [3] Honba count | [4] Riichi count
+  mDoraInformation = core.splitBySeparator(matchArray[2], ":")
+  -- [1] Dpra tiles | [2] Ura tiles
+  mWallInformation = core.splitBySeparator(matchArray[3], ":")
+  -- [1] Wall | [2] Dead Wall
+  mPlayerNames = core.splitBySeparator(matchArray[4], ":")
+  -- [1/2/3/4] E/S/W/N Playername
+  mPoints = core.splitBySeparator(matchArray[5], ":")
+  -- [1/2/3/4] E/S/W/N Player Points
+  mHands = core.splitBySeparator(matchArray[6], ":")
+  -- [1/2/3/4] E/S/W/N Player Hand
+  mDiscards = core.splitBySeparator(matchArray[7], ":")
+  -- [1/2/3/4] E/S/W/N Discards
+  mOpened = core.splitBySeparator(matchArray[8], ":")
+  -- [1/2/3/4] E/S/W/N Opened
+  mOpened = core.splitBySeparator(matchArray[9], ":")
+  -- [1/2/3/4] E/S/W/N Riichi Status
+end
+
+function renderRoundInformation()
+  ui.drawUI(mRoundInformation[1]..mRoundInformation[2], "f", "8", 23, 11)
+  ui.drawUI("H"..mRoundInformation[3], "e", "0", 38, 1)
+  ui.drawUI("R"..mRoundInformation[4], "e", "0", 38, 2)
+end
+
+function renderGame()
+  ui.renderMonochromeBackground(colors.gray)
+  renderRoundInformation()
+end
+
+function game()
+  renderGame()
 end
 
 -- MATCH MENU FUNCTIONS
@@ -207,12 +247,15 @@ function matchMenu(key)
       return
     elseif matchMenuPosition > 3 then
       currentMatch = status(matchMenuOptions[matchMenuPosition])
+      separateMatchProtocol()
+      currentInterface = "GAME"
+      renderGame()
+      return
     end
   end
 
   renderMatchMenu()
   term.setCursorPos(1, 9)
-  print(currentMatch)
 end
 
 -- NAME SELECT FUNCTIONS
@@ -248,11 +291,12 @@ function processKey(key)
     nameSelect(key)
   elseif currentInterface == "MATCHMENU" then
     matchMenu(key)
+  elseif currentInterface == "GAME" then
+    game()
   end
 end
 
 function run()
-
   if currentName == "" then
     currentInterface = "NAMESELECT"
     renderNameSelect()
@@ -271,4 +315,7 @@ function run()
   term.clear()
 end
 
+currentInterface = "MATCHMENU"
+initMatchMenu()
+matchMenuPosition = 4
 run()
