@@ -44,5 +44,69 @@ function drawUI(text, bg, fg, x, y)
   term.blit(text, bg, fg)
 end
 
+function convertTileToDrawParams(tile, x, y)
+  local tileNumber = string.sub(tile, 1, 1)
+  local tileSuit = string.sub(tile, 2, 2)
 
-return { init = init, renderDebug = renderDebug, renderMonochromeBackground = renderMonochromeBackground, drawUI = drawUI, surroundInBrackets = surroundInBrackets }
+  -- DEFAULT TO BLANK
+  local tileForeground = " "
+  -- FOREGROUNDS
+  -- DRAGON
+  if tile == "5z" then
+    tileForeground = "0"
+    tileNumber = "W"
+  elseif tile == "6z" then
+    tileForeground = "d"
+    tileNumber = "G"
+  elseif tile == "7z" then
+    tileForeground = "e"
+    tileNumber = "R"
+  -- WINDS  
+  elseif tileSuit == "z" then
+    tileForeground = "a"
+  -- CHARACTER
+  elseif tileSuit == "m" then
+    tileForeground = "e"
+  -- PIN
+  elseif tileSuit == "p" then
+    tileForeground = "b"
+  -- BAMBOO
+  elseif tileSuit == "s" then
+    tileForeground = "d"
+  end
+
+  -- DEFAULT TO BLANK
+  local tileBackground = "7"
+  -- BACKGROUND
+  -- HIDDEN TILE
+  if tileNumber == "x" then
+    if (x + y) % 2 = 0 then
+      tileBackground = "5"
+    else
+      tileBackground = "d"
+    end
+  -- VISIBLE TILE
+  else
+    -- DORA (UPPERCASE)
+    if string.gmatch(tileSuit, "%u")
+      tileBackground = "2"
+    else
+      if (x + y) % 2 = 0 then
+        tileBackground = "0"
+      else
+        tileBackground = "8"
+      end
+    end
+  end
+
+  return tileNumber, tileForeground, tileBackground, x, y
+end
+
+return { 
+  init = init, 
+  renderDebug = renderDebug, 
+  renderMonochromeBackground = renderMonochromeBackground, 
+  drawUI = drawUI, 
+  surroundInBrackets = surroundInBrackets, 
+  convertTileToDrawParams = convertTileToDrawParams
+}
