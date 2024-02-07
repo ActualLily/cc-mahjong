@@ -1,3 +1,14 @@
+globalTimer = 0
+
+function runTimer()
+  print("timerStarted ")
+  while true do
+    wait(500)
+    globalTimer = globalTimer + 1
+    print(globalTimer)
+  end
+end
+
 function init(protocolToInit, hostnameToInit)
   peripheral.find("modem", rednet.open)
 
@@ -87,4 +98,11 @@ function grabConfig()
   return configArray
 end
 
-return { init = init, verifyRemoteHost = verifyRemoteHost, grabConfig = grabConfig, saveConfig = saveConfig, splitBySeparator = splitBySeparator }
+return { 
+  init = init, 
+  verifyRemoteHost = verifyRemoteHost, 
+  grabConfig = grabConfig, 
+  saveConfig = saveConfig, 
+  splitBySeparator = splitBySeparator, 
+  runTimer = runTimer
+}
