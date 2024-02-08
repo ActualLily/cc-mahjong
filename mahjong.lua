@@ -136,35 +136,121 @@ function separateMatchProtocol()
   -- Please refer to /docs/protocol
   local matchArray = core.splitBySeparator(currentMatch, "/")
 
-  mRoundInformation = core.splitBySeparator(matchArray[1], ":")
+  mRoundInformation = core.splitBySeparator(matchArray[2], ":")
   -- [1] Round Wind | [2] Round # | [3] Honba count | [4] Riichi count
-  mDoraInformation = core.splitBySeparator(matchArray[2], ":")
+  mDoraInformation = core.splitBySeparator(matchArray[3], ":")
   -- [1] Dpra tiles | [2] Ura tiles
-  mWallInformation = core.splitBySeparator(matchArray[3], ":")
+  mWallInformation = core.splitBySeparator(matchArray[4], ":")
   -- [1] Wall | [2] Dead Wall
-  mPlayerNames = core.splitBySeparator(matchArray[4], ":")
+  mPlayerNames = core.splitBySeparator(matchArray[5], ":")
   -- [1/2/3/4] E/S/W/N Playername
-  mPoints = core.splitBySeparator(matchArray[5], ":")
+  mPoints = core.splitBySeparator(matchArray[6], ":")
   -- [1/2/3/4] E/S/W/N Player Points
-  mHands = core.splitBySeparator(matchArray[6], ":")
+  mHands = core.splitBySeparator(matchArray[7], ":")
   -- [1/2/3/4] E/S/W/N Player Hand
-  mDiscards = core.splitBySeparator(matchArray[7], ":")
+  mDiscards = core.splitBySeparator(matchArray[8], ":")
   -- [1/2/3/4] E/S/W/N Discards
-  mOpened = core.splitBySeparator(matchArray[8], ":")
-  -- [1/2/3/4] E/S/W/N Opened
   mOpened = core.splitBySeparator(matchArray[9], ":")
+  -- [1/2/3/4] E/S/W/N Opened
+  mOpened = core.splitBySeparator(matchArray[10], ":")
   -- [1/2/3/4] E/S/W/N Riichi Status
+end
+
+function renderBaseInterface()
+  ui.renderMonochromeBackground(colors.gray)
+  ui.drawUI(" .        >        ^        <       ", "f", "0", 1, 1)
+  ui.drawUI("                                    ", "f", "0", 1, 2)
+  ui.drawUI("        ", "f", "0", 22, 10)
+  ui.drawUI("        ", "f", "08888880", 22, 11)
+  ui.drawUI("        ", "f", "0", 22, 12)
 end
 
 function renderRoundInformation()
   ui.drawUI(mRoundInformation[1]..mRoundInformation[2], "f", "8", 23, 11)
-  ui.drawUI("H"..mRoundInformation[3], "e", "0", 38, 1)
-  ui.drawUI("R"..mRoundInformation[4], "e", "0", 38, 2)
+  ui.drawUI("H"..mRoundInformation[3], "e", "7", 38, 1)
+  ui.drawUI("R"..mRoundInformation[4], "e", "7", 38, 2)
 end
 
+function renderDoraInformation()
+  ui.drawUI("DORA", "0", "7", 41, 1)
+  ui.drawUI("URA", "0", "7", 42, 2)
+  for i = 1, 5 do
+    local tileToConvert = string.sub(mDoraInformation[1], (i * 2) - 1, (i * 2))
+    ui.drawUI(ui.convertTileToDrawParams(tileToConvert, 45 + i, 1))
+  end
+  for i = 1, 5 do
+    local tileToConvert = string.sub(mDoraInformation[2], (i * 2) - 1, (i * 2))
+    ui.drawUI(ui.convertTileToDrawParams(tileToConvert, 45 + i, 2))
+  end
+end
+
+function renderWallInformation()
+  local tileAmountLeft = tostring(#mWallInformation[1] / 2)
+  ui.drawUI(tileAmountLeft, "f", "8", 29 - #tileAmountLeft, 11)
+end
+
+function reorderArrayStartingDown(array)
+  local playerNumber = 1
+
+  for k, v in pairs(mPlayerNames) do
+    if v == currentName then
+      playerNumber = k
+    end
+  end
+
+  local newArray = {}
+  for i = 1, 4 do
+    local currentPlayer = (i + playerNumber - 1) % 4
+    if currentPlayer == 0 then currentPlayer = 4 end
+    newArray[i] = array[currentPlayer]
+  end
+
+  return newArray
+end
+
+function renderPlayerInformation()
+  for k, v in pairs(reorderArrayStartingDown(mPlayerNames)) do
+    ui.drawUI(v, "a", "0", (9 * k) - #v, 2) 
+  end
+  for k, v in pairs(reorderArrayStartingDown(mPoints)) do
+    ui.drawUI(v, "f", "0", (9 * k) - #v, 1) 
+  end
+end
+
+function renderPlayerHands()
+  -- . HAND
+  for i = 1, #mHands[1] / 2 do
+    local tileToConvert = string.sub(mHands[1], (i * 2) - 1, (i * 2))
+    ui.drawUI(convertTileToDrawParams(tileToConvert, 18 + i, 18))
+  end
+
+  -- > HAND
+  for i = 1, #mHands[2] / 2 do
+    local tileToConvert = string.sub(mHands[2], (i * 2) - 1, (i * 2))
+    ui.drawUI(convertTileToDrawParams(tileToConvert, 48, 19 - i))
+  end
+
+  -- ^ HAND
+  for i = 1, #mHands[3] / 2 do
+    local tileToConvert = string.sub(mHands[3], (i * 2) - 1, (i * 2))
+    ui.drawUI(convertTileToDrawParams(tileToConvert, 32 - i, 4))
+  end
+
+  -- < HAND
+  for i = 1, #mHands[2] / 2 do
+    local tileToConvert = string.sub(mHands[4], (i * 2) - 1, (i * 2))
+    ui.drawUI(convertTileToDrawParams(tileToConvert, 4, 3 + i))
+  end
+end
+
+
 function renderGame()
-  ui.renderMonochromeBackground(colors.gray)
+  renderBaseInterface()
   renderRoundInformation()
+  renderDoraInformation()
+  renderWallInformation()
+  renderPlayerInformation()
+  renderPlayerHands()
 end
 
 function game()

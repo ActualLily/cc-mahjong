@@ -1,7 +1,6 @@
 globalTimer = 0
 
 function runTimer()
-  print("timerStarted ")
   while true do
     wait(500)
     globalTimer = globalTimer + 1
@@ -59,7 +58,6 @@ function verifyRemoteHost(remote)
     error("Server "..remote.." could not be reached")
     return false
   end
-  print(hostID)
   return hostID
 end
 

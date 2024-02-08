@@ -1,4 +1,5 @@
 termx, termy = term.getSize()
+term.setPaletteColor(colors.lightGray, 0xBBBBBB)
 
 function init(color)
   term.setBackgroundColor(colors.pink)
@@ -16,7 +17,6 @@ function renderDebug(debugMessage)
 end
 
 function renderMonochromeBackground(color)
-  print("RUNNING")
   term.setBackgroundColor(color)
   term.clear()
 end
@@ -44,7 +44,7 @@ function drawUI(text, bg, fg, x, y)
   term.blit(text, bg, fg)
 end
 
-function convertTileToDrawParams(tile, x, y)
+function convertTileToDrawParams(tile, tilex, tiley)
   local tileNumber = string.sub(tile, 1, 1)
   local tileSuit = string.sub(tile, 2, 2)
 
@@ -63,7 +63,16 @@ function convertTileToDrawParams(tile, x, y)
     tileNumber = "R"
   -- WINDS  
   elseif tileSuit == "z" then
-    tileForeground = "a"
+    tileForeground = "9"
+    if tileNumber == "1" then
+      tileNumber = "E"
+    elseif tileNumber == "2" then
+      tileNumber = "S"
+    elseif tileNumber == "3" then
+      tileNumber = "W"
+    elseif tileNumber == "4" then
+      tileNumber = "N"
+    end
   -- CHARACTER
   elseif tileSuit == "m" then
     tileForeground = "e"
@@ -80,7 +89,8 @@ function convertTileToDrawParams(tile, x, y)
   -- BACKGROUND
   -- HIDDEN TILE
   if tileNumber == "x" then
-    if (x + y) % 2 == 0 then
+    tileNumber = " "
+    if (tilex + tiley) % 2 == 0 then
       tileBackground = "5"
     else
       tileBackground = "d"
@@ -91,7 +101,7 @@ function convertTileToDrawParams(tile, x, y)
     if string.gmatch(tileSuit, "%u") == true then
       tileBackground = "2"
     else
-      if (x + y) % 2 == 0 then
+      if (tilex + tiley) % 2 == 0 then
         tileBackground = "0"
       else
         tileBackground = "8"
@@ -99,7 +109,7 @@ function convertTileToDrawParams(tile, x, y)
     end
   end
 
-  return tileNumber, tileForeground, tileBackground, x, y
+  return tileNumber, tileForeground, tileBackground, tilex, tiley
 end
 
 return { 
